@@ -1,25 +1,256 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Golconda Game</title>
-  <link rel="stylesheet" href="style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Defend the Fort</title>
+ 
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #0b0b0b;
+  color: white;
+  text-align: center;
+}
+ 
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  background: #111;
+  font-size: 14px;
+}
+ 
+.timer.red {
+  color: red;
+  animation: blink 1s infinite;
+}
+ 
+@keyframes blink {
+  50% { opacity: 0.4; }
+}
+ 
+.container {
+  padding: 20px;
+}
+ 
+.mission {
+  font-size: 22px;
+  margin: 20px 0;
+}
+ 
+.instruction {
+  font-size: 16px;
+  color: #aaa;
+  margin-bottom: 20px;
+}
+ 
+button {
+  display: block;
+  margin: 10px auto;
+  padding: 12px;
+  width: 80%;
+  font-size: 16px;
+  border: none;
+  border-radius: 8px;
+  background: gold;
+  color: black;
+}
+ 
+button:active {
+  transform: scale(0.95);
+}
+ 
+#result {
+  font-size: 20px;
+  margin-top: 15px;
+}
+ 
+.hidden {
+  display: none;
+}
+ 
+.flash {
+  animation: flash 0.3s;
+}
+ 
+@keyframes flash {
+  from { background: white; color: black; }
+  to { background: #0b0b0b; color: white; }
+}
+</style>
 </head>
+ 
 <body>
  
-<div class="game">
-  <h1>Defend the Fort</h1>
- 
-  <p id="mission">Loading...</p>
- 
-  <div id="options"></div>
- 
-  <p id="result"></p>
- 
-  <p>Score: <span id="score">0</span></p>
- 
-  <button onclick="nextMission()">Next</button>
+<div class="topbar">
+  <div>⏱ <span id="timer">10:00</span></div>
+  <div>⚡ <span id="score">0</span></div>
 </div>
  
-<script src="script.js"></script>
+<div class="container">
+ 
+<h2 id="title">DEFEND THE FORT</h2>
+ 
+<div id="mission" class="mission"></div>
+<div id="instruction" class="instruction"></div>
+ 
+<div id="actions"></div>
+ 
+<div id="result"></div>
+ 
+<button id="nextBtn" class="hidden" onclick="nextMission()">NEXT</button>
+ 
+<button id="startBtn" onclick="startGame()">START DEFENSE</button>
+ 
+</div>
+ 
+<script>
+let missions = [
+  {
+    title: "ENEMY APPROACHING!",
+    instruction: "Find the guardians above the gate",
+    type: "capture",
+    success: "GUARDIANS ACTIVATED!",
+    points: 100
+  },
+  {
+    title: "ELEPHANTS ATTACKING!",
+    instruction: "What stops the impact?",
+    type: "mcq",
+    options: ["Decoration", "Defense spikes", "Wood"],
+    answer: "Defense spikes",
+    success: "IMPACT BLOCKED!",
+    points: 150
+  },
+  {
+    title: "ENEMY INSIDE!",
+    instruction: "Find a weapon immediately",
+    type: "capture",
+    success: "DIRECT HIT!",
+    points: 200
+  },
+  {
+    title: "DARK AREA!",
+    instruction: "Find a light source",
+    type: "confirm",
+    success: "AREA ILLUMINATED!",
+    points: 120
+  },
+  {
+    title: "FINAL ATTACK!",
+    instruction: "Find downward cannon",
+    type: "capture",
+    success: "ENEMY ELIMINATED!",
+    points: 200
+  }
+];
+ 
+let current = 0;
+let score = 0;
+let time = 600;
+let timerInterval;
+ 
+function startGame() {
+  document.getElementById("startBtn").classList.add("hidden");
+  loadMission();
+  startTimer();
+}
+ 
+function startTimer() {
+  timerInterval = setInterval(() => {
+    time--;
+    let min = Math.floor(time / 60);
+    let sec = time % 60;
+ 
+    document.getElementById("timer").innerText =
+      `${min}:${sec < 10 ? '0' : ''}${sec}`;
+ 
+    if (time < 60) {
+      document.getElementById("timer").classList.add("red");
+    }
+ 
+    if (time <= 0) {
+      clearInterval(timerInterval);
+      endGame();
+    }
+  }, 1000);
+}
+ 
+function loadMission() {
+  let m = missions[current];
+ 
+  document.getElementById("title").innerText = m.title;
+  document.getElementById("mission").innerText = m.title;
+  document.getElementById("instruction").innerText = m.instruction;
+ 
+  let actions = "";
+ 
+  if (m.type === "mcq") {
+    m.options.forEach(opt => {
+      actions += `<button onclick="checkAnswer('${opt}')">${opt}</button>`;
+    });
+  }
+ 
+  if (m.type === "capture") {
+    actions += `<button onclick="capture()">📸 CAPTURE TARGET</button>`;
+  }
+ 
+  if (m.type === "confirm") {
+    actions += `<button onclick="confirmAction()">ACTIVATE</button>`;
+  }
+ 
+  document.getElementById("actions").innerHTML = actions;
+  document.getElementById("result").innerText = "";
+  document.getElementById("nextBtn").classList.add("hidden");
+}
+ 
+function checkAnswer(ans) {
+  let m = missions[current];
+  if (ans === m.answer) success(m);
+  else fail();
+}
+ 
+function capture() {
+  success(missions[current]);
+}
+ 
+function confirmAction() {
+  success(missions[current]);
+}
+ 
+function success(m) {
+  document.body.classList.add("flash");
+  setTimeout(()=>document.body.classList.remove("flash"),300);
+ 
+  score += m.points;
+  document.getElementById("score").innerText = score;
+  document.getElementById("result").innerText = "🔥 " + m.success;
+ 
+  document.getElementById("nextBtn").classList.remove("hidden");
+}
+ 
+function fail() {
+  document.getElementById("result").innerText = "⚠️ TRY AGAIN!";
+}
+ 
+function nextMission() {
+  current++;
+  if (current < missions.length) {
+    loadMission();
+  } else {
+    endGame();
+  }
+}
+ 
+function endGame() {
+  document.getElementById("mission").innerText = "FORT SECURED!";
+  document.getElementById("instruction").innerText = "Final Score: " + score;
+  document.getElementById("actions").innerHTML = "";
+  document.getElementById("nextBtn").classList.add("hidden");
+}
+</script>
+ 
 </body>
 </html>
+ 
