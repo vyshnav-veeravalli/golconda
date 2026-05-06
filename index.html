@@ -1,256 +1,548 @@
-<!DOCTYPE html>
-<html>
+
+<!DOCTYPE html><html lang="en">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Defend the Fort</title>
- 
-<style>
-body {
-  margin: 0;
-  font-family: Arial;
-  background: #0b0b0b;
-  color: white;
-  text-align: center;
-}
- 
-.topbar {
-  display: flex;
-  justify-content: space-between;
-  padding: 10px;
-  background: #111;
-  font-size: 14px;
-}
- 
-.timer.red {
-  color: red;
-  animation: blink 1s infinite;
-}
- 
-@keyframes blink {
-  50% { opacity: 0.4; }
-}
- 
-.container {
-  padding: 20px;
-}
- 
-.mission {
-  font-size: 22px;
-  margin: 20px 0;
-}
- 
-.instruction {
-  font-size: 16px;
-  color: #aaa;
-  margin-bottom: 20px;
-}
- 
-button {
-  display: block;
-  margin: 10px auto;
-  padding: 12px;
-  width: 80%;
-  font-size: 16px;
-  border: none;
-  border-radius: 8px;
-  background: gold;
-  color: black;
-}
- 
-button:active {
-  transform: scale(0.95);
-}
- 
-#result {
-  font-size: 20px;
-  margin-top: 15px;
-}
- 
-.hidden {
-  display: none;
-}
- 
-.flash {
-  animation: flash 0.3s;
-}
- 
-@keyframes flash {
-  from { background: white; color: black; }
-  to { background: #0b0b0b; color: white; }
-}
-</style>
-</head>
- 
-<body>
- 
-<div class="topbar">
-  <div>⏱ <span id="timer">10:00</span></div>
-  <div>⚡ <span id="score">0</span></div>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Defend The Fort</title>  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: #080808;
+      color: white;
+      overflow-x: hidden;
+    }
+
+    .topbar {
+      width: 100%;
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0,0,0,0.8);
+      position: fixed;
+      top: 0;
+      z-index: 1000;
+      backdrop-filter: blur(8px);
+    }
+
+    .xp {
+      font-size: 18px;
+      font-weight: bold;
+      color: gold;
+    }
+
+    .progress-container {
+      width: 70%;
+      height: 14px;
+      background: #222;
+      border-radius: 20px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, orange, gold);
+      transition: width 1s ease;
+      position: relative;
+    }
+
+    .progress-bar::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -30px;
+      width: 30px;
+      height: 100%;
+      background: rgba(255,255,255,0.5);
+      animation: shine 2s linear infinite;
+    }
+
+    @keyframes shine {
+      0% { left: -30px; }
+      100% { left: 100%; }
+    }
+
+    .container {
+      padding: 90px 16px 40px;
+      max-width: 500px;
+      margin: auto;
+    }
+
+    .mission-image {
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      object-fit: cover;
+      border-radius: 18px;
+      border: 3px solid #222;
+      box-shadow: 0 0 20px rgba(255,140,0,0.3);
+    }
+
+    .mission-title {
+      font-size: 28px;
+      margin-top: 20px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .mission-text {
+      font-size: 18px;
+      color: #ddd;
+      margin-top: 16px;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    .buttons {
+      margin-top: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    button {
+      padding: 16px;
+      border-radius: 14px;
+      border: none;
+      font-size: 17px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    button:active {
+      transform: scale(0.95);
+    }
+
+    .primary-btn {
+      background: linear-gradient(90deg, #ff7b00, #ffb300);
+      color: black;
+    }
+
+    .secondary-btn {
+      background: #222;
+      color: white;
+      border: 1px solid #444;
+    }
+
+    .option-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .option-grid img {
+      width: 100%;
+      border-radius: 12px;
+      border: 3px solid transparent;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .option-grid img:active {
+      transform: scale(0.95);
+    }
+
+    .result-popup {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.92);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 2000;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .result-popup img {
+      width: 90%;
+      max-width: 400px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+
+    .result-text {
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 18px;
+    }
+
+    .hint-box {
+      margin-top: 18px;
+      background: rgba(255,255,255,0.08);
+      padding: 14px;
+      border-radius: 12px;
+      display: none;
+      color: #ffce73;
+    }
+
+    .camera-screen {
+      position: fixed;
+      inset: 0;
+      background: black;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 5000;
+    }
+
+    .camera-overlay {
+      width: 260px;
+      height: 320px;
+      border: 4px solid orange;
+      border-radius: 20px;
+      position: relative;
+      margin-bottom: 30px;
+      box-shadow: 0 0 20px orange;
+    }
+
+    .camera-overlay::after {
+      content: 'ALIGN TARGET';
+      position: absolute;
+      bottom: -36px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: white;
+      font-size: 16px;
+    }
+
+    .capture-btn {
+      background: orange;
+      color: black;
+      padding: 16px 30px;
+      border-radius: 50px;
+      font-size: 18px;
+      font-weight: bold;
+      border: none;
+    }
+
+    .wallet-box {
+      margin-top: 20px;
+      padding: 12px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 12px;
+      color: gold;
+      font-size: 15px;
+      text-align: center;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+  </style></head>
+<body>  <div class="topbar">
+    <div class="progress-container">
+      <div class="progress-bar" id="progressBar"></div>
+    </div><div class="xp">⚡ <span id="xp">0</span></div>
+
+  </div>  <div class="container"><img id="missionImage" class="mission-image" src="mission1_question.png">
+
+<div class="mission-title" id="missionTitle">
+  THE FORT IS UNDER ATTACK!
 </div>
- 
-<div class="container">
- 
-<h2 id="title">DEFEND THE FORT</h2>
- 
-<div id="mission" class="mission"></div>
-<div id="instruction" class="instruction"></div>
- 
-<div id="actions"></div>
- 
-<div id="result"></div>
- 
-<button id="nextBtn" class="hidden" onclick="nextMission()">NEXT</button>
- 
-<button id="startBtn" onclick="startGame()">START DEFENSE</button>
- 
+
+<div class="mission-text" id="missionText">
+  Locate the guardian creatures above the gate.
 </div>
- 
-<script>
-let missions = [
+
+<div class="option-grid hidden" id="optionGrid"></div>
+
+<div class="buttons" id="buttonArea">
+  <button class="primary-btn" onclick="foundIt()">FOUND IT</button>
+  <button class="secondary-btn" onclick="showHint()">HINT</button>
+</div>
+
+<div class="hint-box" id="hintBox"></div>
+
+<div class="wallet-box" id="walletBox">
+  🎒 Wallet Items: None
+</div>
+
+  </div>  <div class="camera-screen" id="cameraScreen">
+    <div class="camera-overlay"></div>
+    <button class="capture-btn" onclick="captureMission()">CAPTURE IT</button>
+  </div>  <div class="result-popup" id="resultPopup">
+    <img id="resultImage" src="">
+    <div class="result-text" id="resultText"></div>
+    <button class="primary-btn" onclick="nextMission()">NEXT MISSION</button>
+  </div><script>
+
+const missions = [
   {
-    title: "ENEMY APPROACHING!",
-    instruction: "Find the guardians above the gate",
+    title: "THE FORT IS UNDER ATTACK!",
+    text: "Locate the guardian creatures above the gate.",
+    image: "mission1_question.png",
+    answerImage: "mission1_answer.png",
+    hint: "Search for tiger sculptures on top of the gate.",
     type: "capture",
-    success: "GUARDIANS ACTIVATED!",
-    points: 100
+    result: "GUARDIANS ACTIVATED!",
+    xp: 100,
+    wallet: "None"
   },
+
   {
-    title: "ELEPHANTS ATTACKING!",
-    instruction: "What stops the impact?",
-    type: "mcq",
-    options: ["Decoration", "Defense spikes", "Wood"],
-    answer: "Defense spikes",
-    success: "IMPACT BLOCKED!",
-    points: 150
+    title: "ELEPHANTS ARE HITTING THE GATE!",
+    text: "Search for the object that defends elephants from hitting the gate.",
+    image: "mission2_question.png",
+    type: "options",
+    options: [
+      {img: "mission2_option1.png", correct: false},
+      {img: "mission2_option2.png", correct: true},
+      {img: "mission2_option3.png", correct: false}
+    ],
+    result: "IMPACT BLOCKED!",
+    xp: 150,
+    wallet: "None"
   },
+
   {
-    title: "ENEMY INSIDE!",
-    instruction: "Find a weapon immediately",
+    title: "ENEMIES ARE BREACHING THE GATE!",
+    text: "Find a weapon immediately.",
+    image: "mission3_question.png",
+    answerImage: "mission3_answer.png",
+    hint: "Search for a cannon at the entrance.",
     type: "capture",
-    success: "DIRECT HIT!",
-    points: 200
+    result: "DIRECT HIT!",
+    xp: 200,
+    wallet: "None"
   },
+
   {
-    title: "DARK AREA!",
-    instruction: "Find a light source",
-    type: "confirm",
-    success: "AREA ILLUMINATED!",
-    points: 120
-  },
-  {
-    title: "FINAL ATTACK!",
-    instruction: "Find downward cannon",
+    title: "MORTUARY MISSION",
+    text: "There is a hidden mystery box in the mortuary. Find it!",
+    image: "mission4_question.png",
+    answerImage: "mission4_answer.png",
+    hint: "Search for the mortuary area.",
     type: "capture",
-    success: "ENEMY ELIMINATED!",
-    points: 200
+    result: "MYSTERY BOX ACQUIRED!",
+    xp: 200,
+    wallet: "Mystery Box"
+  },
+
+  {
+    title: "AKKANNA & MADHANNA",
+    text: "Reach their position immediately.",
+    image: "mission5_question.png",
+    answerImage: "mission5_answer.png",
+    hint: "Search for this area at the center.",
+    type: "capture",
+    result: "SECRET LETTER RECEIVED!",
+    xp: 250,
+    wallet: "Mystery Box, Secret Letter"
+  },
+
+  {
+    title: "TRADE MARKET",
+    text: "Search for the market to make a trade.",
+    image: "mission6_question.png",
+    answerImage: "mission6_answer.png",
+    hint: "Search for the market area.",
+    type: "capture",
+    result: "TRADE COMPLETED!",
+    xp: 300,
+    wallet: "Mystery Box, Secret Letter, Gold Coins"
+  },
+
+  {
+    title: "NEAR THE WELL",
+    text: "Find the location of the soldier near the well.",
+    image: "mission7_question.png",
+    answerImage: "mission7_answer.png",
+    hint: "Search near the well.",
+    type: "capture",
+    result: "AMMUNITION ACQUIRED!",
+    xp: 350,
+    wallet: "Mystery Box, Secret Letter, Gold Coins, Ammunition"
+  },
+
+  {
+    title: "RAMDAS JAIL",
+    text: "Find the idol that fits the shape.",
+    image: "mission8.png",
+    answerImage: "mission8.png",
+    hint: "Search in Ramdas prison.",
+    type: "capture",
+    result: "MYSTERY BOX ABSORBED THE IDOL!",
+    xp: 400,
+    wallet: "Mystery Box Activated"
+  },
+
+  {
+    title: "PERSIAN PLATE",
+    text: "Find this Persian plate.",
+    image: "mission9.png",
+    answerImage: "mission9.png",
+    hint: "Search for the Persian plate.",
+    type: "capture",
+    result: "WAR MODE ACTIVATED!",
+    xp: 450,
+    wallet: "War Mode"
+  },
+
+  {
+    title: "FINAL WAR",
+    text: "Find the hidden number to unlock the mystery box.",
+    image: "mission10_question.png",
+    answerImage: "mission10_answer.png",
+    hint: "Find the number engraved on the cannon.",
+    type: "input",
+    answer: "1656",
+    result: "THE ENEMIES HAVE BEEN DEFEATED!",
+    xp: 1000,
+    wallet: "FORT SAVED"
   }
 ];
- 
-let current = 0;
-let score = 0;
-let time = 600;
-let timerInterval;
- 
-function startGame() {
-  document.getElementById("startBtn").classList.add("hidden");
-  loadMission();
-  startTimer();
-}
- 
-function startTimer() {
-  timerInterval = setInterval(() => {
-    time--;
-    let min = Math.floor(time / 60);
-    let sec = time % 60;
- 
-    document.getElementById("timer").innerText =
-      `${min}:${sec < 10 ? '0' : ''}${sec}`;
- 
-    if (time < 60) {
-      document.getElementById("timer").classList.add("red");
-    }
- 
-    if (time <= 0) {
-      clearInterval(timerInterval);
-      endGame();
-    }
-  }, 1000);
-}
- 
+
+let currentMission = 0;
+let xp = 0;
+
 function loadMission() {
-  let m = missions[current];
- 
-  document.getElementById("title").innerText = m.title;
-  document.getElementById("mission").innerText = m.title;
-  document.getElementById("instruction").innerText = m.instruction;
- 
-  let actions = "";
- 
-  if (m.type === "mcq") {
-    m.options.forEach(opt => {
-      actions += `<button onclick="checkAnswer('${opt}')">${opt}</button>`;
-    });
+
+  const mission = missions[currentMission];
+
+  document.getElementById('missionImage').src = mission.image;
+  document.getElementById('missionTitle').innerText = mission.title;
+  document.getElementById('missionText').innerText = mission.text;
+  document.getElementById('hintBox').style.display = 'none';
+  document.getElementById('walletBox').innerText = "🎒 Wallet Items: " + mission.wallet;
+
+  document.getElementById('buttonArea').classList.remove('hidden');
+  document.getElementById('optionGrid').classList.add('hidden');
+
+  const optionGrid = document.getElementById('optionGrid');
+  optionGrid.innerHTML = '';
+
+  if (mission.type === 'options') {
+    document.getElementById('buttonArea').classList.add('hidden');
+    optionGrid.classList.remove('hidden');
+
+    mission.options.forEach(option => {
+      const img = document.createElement('img');
+      img.src = option.img;
+
+      img.onclick = () => {
+        if (option.correct) {
+          success(mission.image, mission.result, mission.xp);
+        } else {
+          img.style.border = '3px solid red';
+        }
+      }
+
+      optionGrid.appendChild(img);
+    })
   }
- 
-  if (m.type === "capture") {
-    actions += `<button onclick="capture()">📸 CAPTURE TARGET</button>`;
-  }
- 
-  if (m.type === "confirm") {
-    actions += `<button onclick="confirmAction()">ACTIVATE</button>`;
-  }
- 
-  document.getElementById("actions").innerHTML = actions;
-  document.getElementById("result").innerText = "";
-  document.getElementById("nextBtn").classList.add("hidden");
-}
- 
-function checkAnswer(ans) {
-  let m = missions[current];
-  if (ans === m.answer) success(m);
-  else fail();
-}
- 
-function capture() {
-  success(missions[current]);
-}
- 
-function confirmAction() {
-  success(missions[current]);
-}
- 
-function success(m) {
-  document.body.classList.add("flash");
-  setTimeout(()=>document.body.classList.remove("flash"),300);
- 
-  score += m.points;
-  document.getElementById("score").innerText = score;
-  document.getElementById("result").innerText = "🔥 " + m.success;
- 
-  document.getElementById("nextBtn").classList.remove("hidden");
-}
- 
-function fail() {
-  document.getElementById("result").innerText = "⚠️ TRY AGAIN!";
-}
- 
-function nextMission() {
-  current++;
-  if (current < missions.length) {
-    loadMission();
+
+  if (mission.type === 'input') {
+    document.getElementById('buttonArea').innerHTML = `
+      <input id="numberInput" type="text" maxlength="4" placeholder="ENTER 4 DIGIT CODE"
+      style="padding:16px;border-radius:12px;border:none;width:100%;font-size:18px;text-align:center;background:#222;color:white;">
+
+      <button class="primary-btn" onclick="checkNumber()">UNLOCK BOX</button>
+
+      <button class="secondary-btn" onclick="showHint()">HINT</button>
+    `;
   } else {
-    endGame();
+    document.getElementById('buttonArea').innerHTML = `
+      <button class="primary-btn" onclick="foundIt()">FOUND IT</button>
+      <button class="secondary-btn" onclick="showHint()">HINT</button>
+    `;
+  }
+
+}
+
+function foundIt() {
+  document.getElementById('cameraScreen').style.display = 'flex';
+}
+
+function captureMission() {
+  document.getElementById('cameraScreen').style.display = 'none';
+
+  const mission = missions[currentMission];
+  success(mission.answerImage, mission.result, mission.xp);
+}
+
+function success(image, text, rewardXP) {
+
+  xp += rewardXP;
+  document.getElementById('xp').innerText = xp;
+
+  const progress = ((currentMission + 1) / missions.length) * 100;
+  document.getElementById('progressBar').style.width = progress + '%';
+
+  document.getElementById('resultImage').src = image;
+  document.getElementById('resultText').innerText = text + ' ⚡ +' + rewardXP + ' XP';
+
+  document.getElementById('resultPopup').style.display = 'flex';
+}
+
+function nextMission() {
+
+  document.getElementById('resultPopup').style.display = 'none';
+
+  currentMission++;
+
+  if (currentMission >= missions.length) {
+    showVictory();
+    return;
+  }
+
+  loadMission();
+}
+
+function showHint() {
+  document.getElementById('hintBox').style.display = 'block';
+  document.getElementById('hintBox').innerText = missions[currentMission].hint;
+}
+
+function checkNumber() {
+  const mission = missions[currentMission];
+  const input = document.getElementById('numberInput').value;
+
+  if (input === mission.answer) {
+    success(mission.answerImage, mission.result, mission.xp);
+  } else {
+    alert('Wrong Code!');
   }
 }
- 
-function endGame() {
-  document.getElementById("mission").innerText = "FORT SECURED!";
-  document.getElementById("instruction").innerText = "Final Score: " + score;
-  document.getElementById("actions").innerHTML = "";
-  document.getElementById("nextBtn").classList.add("hidden");
+
+function showVictory() {
+
+  document.querySelector('.container').innerHTML = `
+    <div style="text-align:center;padding-top:60px;">
+
+      <img src="mission10_answer2.png"
+      style="width:100%;border-radius:20px;margin-bottom:20px;">
+
+      <h1 style="font-size:42px;color:gold;">FORT SECURED!</h1>
+
+      <p style="margin-top:20px;font-size:22px;line-height:1.6;color:#ddd;">
+        You defended Golconda Fort successfully.
+      </p>
+
+      <div style="margin-top:30px;font-size:28px;color:orange;">
+        ⚡ TOTAL XP: ${xp}
+      </div>
+
+      <div style="margin-top:40px;font-size:20px;color:#bbb;">
+        THANK YOU FOR PLAYING
+      </div>
+
+    </div>
+  `;
 }
-</script>
- 
-</body>
+
+loadMission();
+
+</script></body>
 </html>
- 
